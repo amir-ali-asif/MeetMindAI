@@ -1,3 +1,4 @@
 elevenlabs
 python-dotenv
 speechmatics-batch
+openai
