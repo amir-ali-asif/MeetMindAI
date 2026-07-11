@@ -62,7 +62,18 @@ action item includes a confidence score — flagging cases where the owner or
 deadline was unclear in the transcript, so these can be confirmed by a human 
 instead of silently misassigned.
 
-### Step 7: Connected transcription and summarization into one pipeline
-Built `pipeline.py`, combining `transcribe_audio()` and `extract_action_items()` 
-into a single function that takes an audio file and returns a complete summary 
-with action items, ready to be displayed in the app or synced to Gmail/Notion.
+### Step 7 (revised): Separated translation logic into its own module
+Split translation and transliteration logic out of `summarize.py` into a 
+dedicated `translate.py` file, with two functions: `translate_to_english()` 
+(converts Urdu/Hindi/English mixed transcripts into English for LLM 
+processing) and `transliterate_hindi_to_urdu()` (converts ElevenLabs' 
+Hindi-script output into correct Urdu script for display, since 
+Speechmatics already outputs Urdu script natively).
+
+### Step 8: Improved action item owner attribution
+Updated the extraction prompt so that when a person's name isn't clearly 
+mentioned in the transcript, the action item falls back to the speaker 
+label (e.g. "Speaker 1") instead of being left unassigned. This ensures 
+every action item has a traceable owner, while still marking these cases 
+as low-confidence so they can be confirmed by a human before being 
+auto-assigned in Jira/GitHub/Notion.
