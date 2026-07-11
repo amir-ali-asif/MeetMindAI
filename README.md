@@ -20,8 +20,8 @@ closing the loop between "what was said" and "what actually gets done."
 
 - **Transcription (Speech-to-Text):** ElevenLabs Scribe v2 (primary), Speechmatics 
   Enhanced model (automatic fallback if the primary provider fails)
-- **Language Model (Summarization + Action Item Extraction):** OpenAI GPT-4o / 
-  Anthropic Claude
+- **Language Model Framework:** LangChain (with structured output via Pydantic), 
+  using Groq API Key and model -> llama-3.3-70b-versatile
 - **Integrations:** Gmail API, Notion API
 - **Backend:** Python
 - **Frontend:** Streamlit
@@ -54,3 +54,15 @@ switches to Speechmatics, ensuring meetings are never left untranscribed.
 Replaced raw exception/error dumps with simple, human-readable status messages 
 (e.g., "There is some error in ElevenLabs, so we are doing it with Speechmatics") 
 so the tool feels polished and demo-ready rather than exposing technical logs.
+
+### Step 6: Built LLM-based summary and action item extraction using LangChain
+Used LangChain with a Pydantic schema (`MeetingAnalysis`, `ActionItem`) to 
+enforce structured output from llama-3.3-70b-versatile, avoiding manual JSON parsing. Each 
+action item includes a confidence score — flagging cases where the owner or 
+deadline was unclear in the transcript, so these can be confirmed by a human 
+instead of silently misassigned.
+
+### Step 7: Connected transcription and summarization into one pipeline
+Built `pipeline.py`, combining `transcribe_audio()` and `extract_action_items()` 
+into a single function that takes an audio file and returns a complete summary 
+with action items, ready to be displayed in the app or synced to Gmail/Notion.

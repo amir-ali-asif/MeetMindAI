@@ -3,5 +3,5 @@ python-dotenv
 speechmatics-batch
 openai
 langchain
-langchain-openai
+langchain-groq
 pydantic
