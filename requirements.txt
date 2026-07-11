@@ -2,3 +2,6 @@ elevenlabs
 python-dotenv
 speechmatics-batch
 openai
+langchain
+langchain-openai
+pydantic
