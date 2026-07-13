@@ -77,3 +77,17 @@ label (e.g. "Speaker 1") instead of being left unassigned. This ensures
 every action item has a traceable owner, while still marking these cases 
 as low-confidence so they can be confirmed by a human before being 
 auto-assigned in Jira/GitHub/Notion.
+
+### Step 9: Built the Streamlit user interface
+Created `app.py` with a Streamlit-based UI: users upload a meeting 
+recording, and the app displays the original transcript (correct Urdu 
+script), English translation, meeting summary, key decisions, and 
+action items with confidence badges (high confidence vs needs human 
+confirmation).
+
+### Step 10: Added transcription model selector to UI
+Added two buttons in the Streamlit UI (ElevenLabs, Speechmatics) letting 
+users explicitly choose which speech-to-text provider to use, with 
+accurate free-tier constraint information displayed for each. Defaults 
+to ElevenLabs. Automatic fallback to the other provider still applies 
+if the chosen one fails.

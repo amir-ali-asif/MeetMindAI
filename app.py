@@ -22,6 +22,33 @@ from pipeline import process_meeting
 st.set_page_config(page_title="Meeting Assistant", layout="wide")
 
 st.title("🎙️ Urdu-English Meeting Assistant")
+
+st.subheader("Choose Transcription Model")
+
+# Keep track of selected model in session state, default to ElevenLabs
+if "selected_model" not in st.session_state:
+    st.session_state["selected_model"] = "elevenlabs"
+
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("🎙️ ElevenLabs", use_container_width=True,
+                 type="primary" if st.session_state["selected_model"] == "elevenlabs" else "secondary"):
+        st.session_state["selected_model"] = "elevenlabs"
+
+with col2:
+    if st.button("🎙️ Speechmatics", use_container_width=True,
+                 type="primary" if st.session_state["selected_model"] == "speechmatics" else "secondary"):
+        st.session_state["selected_model"] = "speechmatics"
+
+# Display constraint info based on selection
+if st.session_state["selected_model"] == "elevenlabs":
+    st.info("**ElevenLabs (Free Tier):** ~10,000 credits/month, costing roughly 330 credits per minute of audio — about **30 minutes of transcription per month** on the free plan.")
+else:
+    st.info("**Speechmatics (Free Tier):** 8 hours (480 minutes) of audio processing per month, no file size restriction up to 4GB / 2 hours per file.")
+
+st.divider()
+
 st.write("Upload a meeting recording to get a transcript, summary, and action items.")
 
 uploaded_file = st.file_uploader(
@@ -40,11 +67,12 @@ if uploaded_file is not None:
     st.success(f"Uploaded: {uploaded_file.name}")
 
     if st.button("Process Meeting"):
+        
         progress_placeholder = st.empty()
+        progress_placeholder.info(f"🎙️ Transcribing audio using {st.session_state['selected_model'].capitalize()}...")
+        result = process_meeting(temp_path, preferred_model=st.session_state["selected_model"])
 
-        progress_placeholder.info("🎙️ Transcribing audio...")
-        result = process_meeting(temp_path)
-        progress_placeholder.empty()
+        progress_placeholder.empty()  # Clear the progress message
 
         if result["success"]:
             st.session_state["result"] = result

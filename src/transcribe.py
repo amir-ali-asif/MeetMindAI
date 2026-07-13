@@ -17,55 +17,44 @@ def _transcribe_elevenlabs(file_path: str) -> dict:
                 diarize=True
             )
 
-        return {
-            "success": True,
-            "text": result.text,
-            "error": None
-        }
+        return {"success": True, "text": result.text, "error": None}
 
     except Exception as e:
-        return {
-            "success": False,
-            "text": None,
-            "error": str(e)
-        }
+        return {"success": False, "text": None, "error": str(e)}
 
 
-def transcribe_audio(file_path: str) -> dict:
+def transcribe_audio(file_path: str, preferred_model: str = "elevenlabs") -> dict:
     """
-    Tries ElevenLabs first (primary model).
-    If it fails for ANY reason (credits exhausted, network error, etc.),
-    automatically falls back to Speechmatics.
-    Returns which provider actually produced the result, for transparency.
+    preferred_model: "elevenlabs" or "speechmatics" - the user's explicit choice.
+    Still falls back to the other provider if the chosen one fails.
     """
-    result = _transcribe_elevenlabs(file_path)
+    if preferred_model == "elevenlabs":
+        result = _transcribe_elevenlabs(file_path)
+        if result["success"]:
+            result["provider_used"] = "elevenlabs"
+            return result
 
-    if result["success"]:
-        result["provider_used"] = "elevenlabs"
-        return result
+        print("There is some error in ElevenLabs, so we are doing it with Speechmatics.")
+        fallback_result = transcribe_speechmatics(file_path)
+        if fallback_result["success"]:
+            fallback_result["provider_used"] = "speechmatics"
+            return fallback_result
 
-    print("There is some error in ElevenLabs, so we are doing it with Speechmatics.")
-    fallback_result = transcribe_speechmatics(file_path)
+    else:  # preferred_model == "speechmatics"
+        result = transcribe_speechmatics(file_path)
+        if result["success"]:
+            result["provider_used"] = "speechmatics"
+            return result
 
-    if fallback_result["success"]:
-        fallback_result["provider_used"] = "speechmatics"
-        return fallback_result
+        print("There is some error in Speechmatics, so we are doing it with ElevenLabs.")
+        fallback_result = _transcribe_elevenlabs(file_path)
+        if fallback_result["success"]:
+            fallback_result["provider_used"] = "elevenlabs"
+            return fallback_result
 
-    # Both failed
-    print("Speechmatics also failed. Unable to transcribe this audio right now.")
     return {
         "success": False,
         "text": None,
         "provider_used": None,
         "error": "Both transcription providers failed."
     }
-
-if __name__ == "__main__":
-    test_file = "sample_audio/s2.ogg"
-    output = transcribe_audio(test_file)
-
-    if output["success"]:
-        print(f"\n=== TRANSCRIPT (via {output['provider_used']}) ===")
-        print(output["text"])
-    else:
-        print("Sorry, transcription failed. Please try again later.")

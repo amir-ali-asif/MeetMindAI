@@ -3,14 +3,14 @@ from translate import translate_to_english, transliterate_hindi_to_urdu
 from summarize import extract_details
 
 
-def process_meeting(audio_file_path: str) -> dict:
+def process_meeting(audio_file_path: str, preferred_model: str = "elevenlabs") -> dict:
     """
     Full pipeline: audio file -> transcript -> (transliterate if needed) 
     -> translate to English -> summary + action items
     """
 
     # Step 1: Transcribe
-    transcription_result = transcribe_audio(audio_file_path)
+    transcription_result = transcribe_audio(audio_file_path, preferred_model=preferred_model)
 
     if not transcription_result["success"]:
         return {
