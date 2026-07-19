@@ -22,7 +22,7 @@ closing the loop between "what was said" and "what actually gets done."
   Enhanced model (automatic fallback if the primary provider fails)
 - **Language Model Framework:** LangChain (with structured output via Pydantic), 
   using Groq API Key and model -> llama-3.3-70b-versatile
-- **Integrations:** Gmail API, Notion API
+- **Integrations:** Gmail API
 - **Backend:** Python
 - **Frontend:** Streamlit
 - **Version Control:** Git + GitHub
