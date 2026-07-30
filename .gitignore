@@ -6,3 +6,6 @@ __pycache__/
 *.mp3
 *.ogg
 temp_uploads/
+reports/
+token.json
+credentials.json

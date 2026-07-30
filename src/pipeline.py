@@ -1,6 +1,11 @@
 from transcribe import transcribe_audio
 from translate import translate_to_english, transliterate_hindi_to_urdu
 from summarize import extract_details
+from pdf_generator import generate_meeting_report_pdf
+from email_sender import send_meeting_report_email
+import uuid
+import os
+
 
 
 def process_meeting(audio_file_path: str, preferred_model: str = "elevenlabs") -> dict:
@@ -65,6 +70,26 @@ def process_meeting(audio_file_path: str, preferred_model: str = "elevenlabs") -
     }
 
 
+def send_report_to_ceo(meeting_data: dict) -> dict:
+    """
+    Generates a PDF report from meeting data and emails it to the CEO.
+    """
+    CEO_EMAIL = os.getenv("CEO_EMAIL")  # Make sure to set this environment variable in your system or .env file
+    os.makedirs("reports", exist_ok=True)
+    pdf_path = f"reports/report_{uuid.uuid4().hex[:8]}.pdf"
+
+    pdf_result = generate_meeting_report_pdf(meeting_data, pdf_path)
+    if not pdf_result["success"]:
+        return {"success": False, "error": f"PDF generation failed: {pdf_result['error']}"}
+
+    email_result = send_meeting_report_email(CEO_EMAIL, pdf_path)
+    if not email_result["success"]:
+        return {"success": False, "error": f"Email sending failed: {email_result['error']}"}
+
+    return {"success": True, "pdf_path": pdf_path, "error": None}
+
+
+
 if __name__ == "__main__":
     test_file = "sample_audio/s1.ogg"
     result = process_meeting(test_file)
@@ -85,5 +110,8 @@ if __name__ == "__main__":
         low_confidence_items = [item for item in result["action_items"] if item["confidence"] == "low"]
         if low_confidence_items:
             print(f"\n⚠️  {len(low_confidence_items)} action item(s) need human confirmation (unclear owner/deadline).")
+        send_result = send_report_to_ceo(result)
+        if send_result["success"]:
+            print(f"\n✅ Report sent to CEO successfully! PDF saved at: {send_result['pdf_path']}")
     else:
         print(f"Pipeline failed at: {result['stage_failed']} — {result['error']}")
