@@ -91,3 +91,10 @@ users explicitly choose which speech-to-text provider to use, with
 accurate free-tier constraint information displayed for each. Defaults 
 to ElevenLabs. Automatic fallback to the other provider still applies 
 if the chosen one fails.
+
+### Step 11: Added PDF report generation and Gmail delivery
+Built `pdf_generator.py` using ReportLab to create a clean, professional 
+meeting report (summary, key decisions, action items table). Added 
+`send_meeting_report_email()` to email this PDF as an attachment. Wired 
+both into the pipeline via a "Send Report to CEO" button in the UI — 
+completing the core "meeting to execution" loop end-to-end.
