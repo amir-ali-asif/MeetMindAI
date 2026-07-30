@@ -83,24 +83,3 @@ def generate_meeting_report_pdf(meeting_data: dict, output_path: str) -> dict:
     except Exception as e:
         return {"success": False, "path": None, "error": str(e)}
 
-
-if __name__ == "__main__":
-    sample_data = {
-        "summary": "The team discussed the upcoming deployment schedule and testing requirements.",
-        "key_decisions": [
-            "Deployment will proceed tomorrow at 5 PM",
-            "Testing will run in parallel with deployment"
-        ],
-        "action_items": [
-            {"task": "Complete deployment", "owner": "Ahmed", "deadline": "Tomorrow 5 PM", "confidence": "high"},
-            {"task": "Run parallel testing", "owner": "Speaker 2", "deadline": None, "confidence": "low"}
-        ]
-    }
-
-    os.makedirs("reports", exist_ok=True)
-    result = generate_meeting_report_pdf(sample_data, "reports/test_report.pdf")
-
-    if result["success"]:
-        print(f"PDF generated at: {result['path']}")
-    else:
-        print(f"Failed: {result['error']}")

@@ -75,27 +75,3 @@ def extract_details(transcript_text: str) -> dict:
             "data": None,
             "error": str(e)
         }
-
-
-if __name__ == "__main__":
-    sample_transcript = """
-    Ahmed: Acha humein deployment kal 5 bajay tak complete krna hai.
-    Sara: Yes, and please run testing in parallel.
-    Ahmed: Sure, I'll start abhi se hi.
-    """
-
-    result = extract_details(sample_transcript)
-
-    if result["success"]:
-        analysis = result["data"]
-        print("=== Summary ===")
-        print(analysis.summary)
-        print("\n=== Key Decisions ===")
-        for d in analysis.key_decisions:
-            print(f"- {d}")
-        print("\n=== Action Items ===")
-        for item in analysis.action_items:
-            print(f"- Task: {item.task}")
-            print(f"  Owner: {item.owner} | Deadline: {item.deadline} | Confidence: {item.confidence}")
-    else:
-        print(f"Something went wrong: {result['error']}")

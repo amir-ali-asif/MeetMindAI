@@ -87,31 +87,3 @@ def send_report_to_ceo(meeting_data: dict) -> dict:
         return {"success": False, "error": f"Email sending failed: {email_result['error']}"}
 
     return {"success": True, "pdf_path": pdf_path, "error": None}
-
-
-
-if __name__ == "__main__":
-    test_file = "sample_audio/s1.ogg"
-    result = process_meeting(test_file)
-
-    if result["success"]:
-        print(f"\n=== Transcribed via: {result['transcription_provider']} ===")
-        print(f"\n=== Original Transcript (Urdu script) ===\n{result['display_transcript']}")
-        print(f"\n=== English Translation ===\n{result['english_transcript']}")
-        print(f"\n=== Summary ===\n{result['summary']}")
-        print(f"\n=== Key Decisions ===")
-        for d in result["key_decisions"]:
-            print(f"- {d}")
-        print(f"\n=== Action Items ===")
-        for item in result["action_items"]:
-            print(f"- Task: {item['task']}")
-            print(f"  Owner: {item['owner']} | Deadline: {item['deadline']} | Confidence: {item['confidence']}")
-
-        low_confidence_items = [item for item in result["action_items"] if item["confidence"] == "low"]
-        if low_confidence_items:
-            print(f"\n⚠️  {len(low_confidence_items)} action item(s) need human confirmation (unclear owner/deadline).")
-        send_result = send_report_to_ceo(result)
-        if send_result["success"]:
-            print(f"\n✅ Report sent to CEO successfully! PDF saved at: {send_result['pdf_path']}")
-    else:
-        print(f"Pipeline failed at: {result['stage_failed']} — {result['error']}")
