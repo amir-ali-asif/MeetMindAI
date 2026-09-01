@@ -21,7 +21,7 @@ closing the loop between "what was said" and "what actually gets done."
 - **Transcription (Speech-to-Text):** ElevenLabs Scribe v2 (primary), Speechmatics 
   Enhanced model (automatic fallback if the primary provider fails)
 - **Language Model Framework:** LangChain (with structured output via Pydantic), 
-  using Groq API Key and model -> llama-3.3-70b-versatile
+  using Groq API Key and model -> openai/gpt-oss-120b
 - **Integrations:** Gmail API
 - **Backend:** Python
 - **Frontend:** Streamlit
