@@ -1,4 +1,4 @@
-# 🎙️ Urdu-English Meeting Execution Assistant
+# 🎙️ MeetMindAI: Urdu-English Meeting Execution Assistant
 
 An AI-powered meeting intelligence tool built specifically for **Urdu-English
 multilingual meetings** — the way teams in Pakistan actually talk, mixing both
