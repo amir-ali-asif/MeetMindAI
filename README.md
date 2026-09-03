@@ -12,8 +12,9 @@ summaries.
 
 The tool accepts meeting audio, transcribes it accurately across both
 languages, extracts a summary and clear action items with owners and
-deadlines, and pushes a polished report straight into your inbox — closing
-the loop between "what was said" and "what actually gets done."
+deadlines, and pushes a polished report straight to any email address you
+provide — closing the loop between "what was said" and "what actually gets
+done."
 
 ---
 
@@ -29,7 +30,7 @@ the loop between "what was said" and "what actually gets done."
   - [3. Set up a virtual environment](#3-set-up-a-virtual-environment)
   - [4. Install dependencies](#4-install-dependencies)
   - [5. Configure API keys](#5-configure-api-keys--env)
-  - [6. Set up Gmail API access](#6-set-up-gmail-api-access-for-report-emails)
+  - [6. Set up Gmail SMTP access](#6-set-up-gmail-smtp-access-for-report-emails)
   - [7. Run the app](#7-run-the-app)
 - [Usage Guide](#usage-guide)
 - [Build Log — How This Project Was Built](#build-log--how-this-project-was-built)
@@ -59,8 +60,9 @@ the loop between "what was said" and "what actually gets done."
   human confirmation" (assigned to a speaker label instead of being lost).
 - 📄 **One-click PDF report generation** with a clean summary, key decisions,
   and an action-items table.
-- 📧 **One-click email delivery** of the report to a configured recipient
-  (e.g. the CEO) via the Gmail API.
+- 📧 **Send-to-any-email delivery** — the user enters a recipient email
+  address directly in the UI, and the report is emailed to that address via
+  Gmail SMTP — no hardcoded recipient, no OAuth consent flow.
 - 🖥️ **Simple Streamlit UI** — upload, choose your transcription engine,
   process, review, and send — no command-line steps required after setup.
 
@@ -72,7 +74,7 @@ the loop between "what was said" and "what actually gets done."
 | LLM Framework | LangChain, structured output via Pydantic |
 | LLM Provider | Groq API (`openai/gpt-oss-120b`) |
 | Report Generation | ReportLab (PDF) |
-| Email Delivery | Gmail API (OAuth 2.0) |
+| Email Delivery | Gmail SMTP (App Password) |
 | Backend | Python |
 | Frontend | Streamlit |
 | Version Control | Git + GitHub |
@@ -100,7 +102,8 @@ Audio file
 [5] Display in Streamlit UI
     (original Urdu transcript, English translation, summary, action items)
    ▼
-[6] (Optional) Generate PDF report → Email to recipient via Gmail API
+[6] (Optional) Generate PDF report → Email to a recipient address entered
+    by the user, via Gmail SMTP
 ```
 
 ## Project Structure
@@ -116,7 +119,7 @@ meeting-assistant/
 │   ├── translate.py               # Translation + Hindi→Urdu transliteration
 │   ├── summarize.py               # LLM-based summary & action item extraction
 │   ├── pdf_generator.py           # Builds the PDF meeting report
-│   └── email_sender.py            # Sends the report via the Gmail API
+│   └── email_sender.py            # Sends the report via Gmail SMTP
 ├── temp_uploads/                  # Uploaded audio files (gitignored, auto-created)
 ├── reports/                       # Generated PDF reports (gitignored, auto-created)
 └── .gitignore
@@ -131,8 +134,8 @@ meeting-assistant/
   - [ElevenLabs](https://elevenlabs.io/) (Scribe v2 speech-to-text)
   - [Speechmatics](https://www.speechmatics.com/) (Enhanced model, fallback transcription)
   - [Groq](https://groq.com/) (LLM inference — translation, transliteration, extraction)
-- A Google Cloud project with the **Gmail API** enabled, if you want to use
-  the "Send Report to CEO" email feature (see [step 6](#6-set-up-gmail-api-access-for-report-emails))
+- A Gmail account with an **App Password** enabled, if you want to use
+  the "Send Report" email feature (see [step 6](#6-set-up-gmail-smtp-access-for-report-emails))
 
 ### 2. Clone the repository
 
@@ -168,7 +171,8 @@ never be committed):
 ELEVENLABS_API_KEY=your_elevenlabs_api_key
 SPEECHMATICS_API_KEY=your_speechmatics_api_key
 GROQ_API_KEY=your_groq_api_key
-CEO_EMAIL=recipient@example.com
+GMAIL_ADDRESS=your_gmail_address@gmail.com
+GMAIL_APP_PASSWORD=your_16_character_app_password
 ```
 
 | Variable | Used by | Purpose |
@@ -176,26 +180,32 @@ CEO_EMAIL=recipient@example.com
 | `ELEVENLABS_API_KEY` | `src/transcribe.py` | Primary transcription engine |
 | `SPEECHMATICS_API_KEY` | `src/transcribe_speechmatics.py` | Fallback (or manually selected) transcription engine |
 | `GROQ_API_KEY` | `src/translate.py`, `src/summarize.py` | LLM calls for translation, transliteration, and extraction |
-| `CEO_EMAIL` | `src/pipeline.py` | Recipient address for the "Send Report to CEO" button |
+| `GMAIL_ADDRESS` | `src/email_sender.py` | The Gmail account the report is sent **from** |
+| `GMAIL_APP_PASSWORD` | `src/email_sender.py` | App password authenticating that Gmail account for SMTP |
 
-### 6. Set up Gmail API access (for report emails)
+> Note: the report's **recipient** is not an environment variable — it's
+> whatever email address the user types into the app's "Send Report" field
+> at runtime.
 
-The "Send Report to CEO" feature authenticates with your Gmail account via
-OAuth 2.0. To enable it:
+### 6. Set up Gmail SMTP access (for report emails)
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and
-   create (or select) a project.
-2. Enable the **Gmail API** for that project.
-3. Configure an OAuth consent screen and create an **OAuth client ID**
-   (application type: *Desktop app*).
-4. Download the resulting client secret file, rename it to
-   `credentials.json`, and place it in the project root.
-5. On the first time you click "Send Report to CEO," a browser window will
-   open asking you to sign in and grant permission. A `token.json` file will
-   then be saved locally so you won't need to re-authenticate on future runs.
+The "Send Report" feature sends mail via Gmail's SMTP server using an app
+password — no OAuth consent screen and no browser popup required, so it
+works the same way locally and on a deployed server.
 
-> Both `credentials.json` and `token.json` are gitignored — never commit
-> either file.
+1. Enable **2-Step Verification** on the Gmail account you want to send
+   from, at [myaccount.google.com/security](https://myaccount.google.com/security)
+   (app passwords only exist for accounts with this on).
+2. Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+   and generate a new app password (e.g. name it "meeting assistant").
+3. Copy the 16-character code Google gives you and set it as
+   `GMAIL_APP_PASSWORD` in your `.env` (remove any spaces).
+4. Set `GMAIL_ADDRESS` to the Gmail address you generated the app password
+   for.
+
+> This is **not** your normal Gmail login password — Google blocks
+> password-based SMTP login entirely for accounts with 2-Step Verification
+> on. The app password is a separate, single-purpose credential.
 
 ### 7. Run the app
 
@@ -212,7 +222,9 @@ open it in your browser to use the app.
    is selected by default; if it fails for any reason (e.g. quota exhausted,
    network error), the app automatically retries with the other provider.
 2. **Upload a meeting recording** — supported formats: `.wav`, `.mp3`,
-   `.m4a`, `.ogg`.
+   `.m4a`, `.ogg`. Both transcription providers are running on free-tier
+   limits in this demo, so a short clip (1-2 minutes) is best for trying the
+   project out.
 3. **Click "Process Meeting"** — the app transcribes the audio, converts the
    script for correct Urdu display, translates it to English, and runs LLM
    extraction. This produces:
@@ -225,9 +237,9 @@ open it in your browser to use the app.
 4. **Review the action items** — items marked 🟡 mean the owner or deadline
    wasn't explicitly stated and was inferred from a speaker label; confirm
    these before treating them as final.
-5. **Click "📧 Send Report to CEO"** — generates a PDF of the summary, key
-   decisions, and action items table, and emails it to the address set in
-   `CEO_EMAIL`.
+5. **Enter a recipient email and click "Send Report"** — generates a PDF of
+   the summary, key decisions, and action items table, and emails it to
+   whatever address you type into the field.
 
 ## Build Log — How This Project Was Built
 
@@ -295,19 +307,30 @@ free-tier constraint information displayed for each. Defaults to ElevenLabs.
 Automatic fallback to the other provider still applies if the chosen one
 fails.
 
-### Step 11: Added PDF report generation and Gmail delivery
+### Step 11: Added PDF report generation and email delivery
 Built `pdf_generator.py` using ReportLab to create a clean, professional
 meeting report (summary, key decisions, action items table). Added
 `send_meeting_report_email()` to email this PDF as an attachment. Wired both
 into the pipeline via a "Send Report to CEO" button in the UI — completing
 the core "meeting to execution" loop end-to-end.
 
+### Step 12: Switched to a user-entered recipient with Gmail SMTP
+Replaced the hardcoded `CEO_EMAIL` recipient with a text input in the UI, so
+the report can be sent to any address the user provides. Also replaced the
+Gmail API OAuth flow (`InstalledAppFlow`, `credentials.json`, `token.json`)
+with plain Gmail SMTP authenticated via an app password — the OAuth flow
+required a local browser to complete consent, which made it unusable on a
+deployed/headless server. Added a free-tier usage warning in the UI
+recommending short (1-2 minute) demo clips.
+
 ## Known Limitations
 
-- The Gmail integration uses the OAuth **Installed App flow**
-  (`run_local_server`), which opens a local browser window — this works for
-  local/desktop use but requires adaptation (e.g. a web OAuth flow) for a
-  headless server deployment.
+- Both transcription providers run on free-tier accounts for this demo —
+  long audio files may hit rate/quota limits, so short clips (1-2 minutes)
+  are recommended for trying the project out.
+- The recipient email field is open text with only basic format validation;
+  there's no login gate, so anyone with the link can trigger an email send
+  to any address they enter.
 - `temp_uploads/` and `reports/` are cleared/created at runtime and are not
   intended for long-term storage of audio files or reports.
 - Action items with 🟡 low confidence are best-effort inferences and should

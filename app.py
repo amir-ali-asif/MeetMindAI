@@ -15,7 +15,8 @@ if "cleaned_temp" not in st.session_state:
 # Allow importing from the src/ folder
 sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
 
-from pipeline import process_meeting, send_report_to_ceo
+import re
+from pipeline import process_meeting, send_report_to_email
 
 st.set_page_config(page_title="Meeting Assistant", layout="wide")
 
@@ -49,6 +50,12 @@ st.divider()
 
 st.write("Upload a meeting recording to get a transcript, summary, and action items.")
 
+st.warning(
+    "⚠️ Both transcription providers (ElevenLabs and Speechmatics) are running on "
+    "free-tier limits for this demo. Please use a short audio clip (1-2 minutes) "
+    "just to get a feel for how the project works, rather than a full-length meeting."
+)
+
 uploaded_file = st.file_uploader(
     "Upload your meeting audio",
     type=["wav", "mp3", "m4a", "ogg"]
@@ -77,7 +84,7 @@ if uploaded_file is not None:
             st.error(f"Something went wrong at the {result['stage_failed']} stage: {result['error']}")
 
 # --- Everything below is OUTSIDE the "Process Meeting" button block ---
-# --- so it persists correctly across reruns (e.g. when clicking "Send Report to CEO") ---
+# --- so it persists correctly across reruns (e.g. when clicking "Send Report") ---
 
 if "result" in st.session_state:
     result = st.session_state["result"]
@@ -123,11 +130,24 @@ if "result" in st.session_state:
                 st.markdown(confidence_badge)
 
     st.divider()
-    if st.button("📧 Send Report to CEO"):
-        with st.spinner("Generating report and sending email..."):
-            report_result = send_report_to_ceo(result)
+    st.subheader("📧 Send Report")
 
-        if report_result["success"]:
-            st.success("Report sent to CEO successfully!")
+    recipient_email = st.text_input(
+        "Recipient email address",
+        key="recipient_email",
+        placeholder="name@example.com"
+    )
+
+    if st.button("Send Report"):
+        email_pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+
+        if not recipient_email or not re.match(email_pattern, recipient_email.strip()):
+            st.error("Please enter a valid email address before sending.")
         else:
-            st.error(f"Failed to send report: {report_result['error']}")
+            with st.spinner("Generating report and sending email..."):
+                report_result = send_report_to_email(result, recipient_email.strip())
+
+            if report_result["success"]:
+                st.success(f"Report sent to {recipient_email.strip()}!")
+            else:
+                st.error(f"Failed to send report: {report_result['error']}")
